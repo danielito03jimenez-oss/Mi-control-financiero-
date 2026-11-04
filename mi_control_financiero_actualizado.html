@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mi Control Financiero</title>
+<style>
+:root{--bg:#fbf8fd;--card:#fff;--ink:#34283d;--muted:#786d80;--lilac:#a879c7;--lilac2:#f0e5f8;--pink:#e9a5c2;--pink2:#fcebf2;--line:#eadfed;--green:#367b55;--red:#b34d68}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(140deg,#fbf7ff,#fff8fb);font-family:system-ui,-apple-system,Segoe UI,sans-serif;color:var(--ink)}
+header{padding:26px 18px 18px;text-align:center;background:linear-gradient(120deg,#eadcf5,#fbe3ee);border-bottom:1px solid var(--line)}
+h1{margin:0;font-size:clamp(25px,5vw,36px)}header p{margin:7px 0 0;color:#665574}
+main{max-width:980px;margin:22px auto;padding:0 14px 40px}.top{display:flex;gap:12px;align-items:end;justify-content:space-between;flex-wrap:wrap}
+.panel,.stat{background:var(--card);border:1px solid var(--line);border-radius:17px;padding:16px;box-shadow:0 5px 18px #53316a0b}
+.panel{margin:14px 0}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0}
+.stat small{color:var(--muted)}.stat strong{display:block;font-size:clamp(18px,3vw,25px);margin-top:5px;overflow-wrap:anywhere}
+label{display:block;font-size:13px;color:var(--muted);margin:9px 0 5px}input,select,button{font:inherit;border-radius:10px;border:1px solid var(--line);padding:10px;background:#fff;color:var(--ink);max-width:100%}
+input,select{width:100%}button{cursor:pointer;background:var(--lilac2);border-color:#e0cbe9;font-weight:600}button.primary{background:var(--lilac);color:white;border-color:var(--lilac)}button.softpink{background:var(--pink2);border-color:#f1d1df}button.danger{background:#fff0f2;color:#9e3d58;border-color:#f1c9d3}
+button:disabled{opacity:.45;cursor:not-allowed}.tabs{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0}.tabs button.active{background:var(--lilac);color:white}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.row{display:flex;gap:10px;align-items:end;flex-wrap:wrap}.row>*{flex:1;min-width:120px}
+.muted{color:var(--muted);font-size:13px}.progress{height:10px;background:#f0eaf3;border-radius:20px;overflow:hidden;margin:8px 0}.progress span{display:block;height:100%;background:linear-gradient(90deg,var(--lilac),var(--pink));width:0}
+.item{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}.item:last-child{border:0}.pill{font-size:12px;padding:4px 8px;border-radius:20px;background:var(--lilac2);color:#674780}
+table{width:100%;border-collapse:collapse;font-size:14px}td,th{text-align:left;padding:9px 6px;border-bottom:1px solid var(--line)}th{color:var(--muted);font-weight:600}
+.hidden{display:none}.check{width:auto}.empty{padding:18px;text-align:center;color:var(--muted)}
+footer{text-align:center;color:var(--muted);font-size:12px;margin-top:22px}
+@media(max-width:650px){.stats{grid-template-columns:repeat(2,1fr)}.grid{grid-template-columns:1fr}main{padding-left:10px;padding-right:10px}.panel{padding:13px}}
+</style></head>
+<body>
+<header><h1>💜 Mi Control Financiero</h1><p>Tu dinero bajo control. Tus metas cada vez más cerca.</p></header>
+<main>
+<div class="top"><div><div class="muted">AÑO DE TRABAJO</div><div class="row" style="align-items:center"><select id="year"></select><button id="archiveYear" class="softpink">Archivar año</button></div></div><div class="row" style="flex:0 1 380px"><button id="export">Exportar respaldo</button><label class="primary" style="padding:10px;border-radius:10px;text-align:center;color:white;background:var(--lilac);cursor:pointer">Importar respaldo<input id="import" type="file" accept=".json,application/json" hidden></label></div></div>
+<div class="stats">
+ <div class="stat"><small>Disponible estimado</small><strong id="available">$0.00</strong></div>
+ <div class="stat"><small>Ingresos</small><strong id="incomeTotal">$0.00</strong></div>
+ <div class="stat"><small>Gastos</small><strong id="expenseTotal">$0.00</strong></div>
+ <div class="stat"><small>Ahorro acumulado</small><strong id="savingTotal">$0.00</strong></div>
+</div>
+<div class="tabs">
+ <button class="active" data-tab="overview">Resumen</button><button data-tab="salaryTab">Mi sueldo</button><button data-tab="money">Finanzas</button><button data-tab="challenge">Retos de ahorro</button><button data-tab="history">Historial</button><button data-tab="settings">Personalización</button>
+</div>
+<section id="overview" class="tab">
+ <div class="panel"><h2>Resumen del año <span id="yearLabel"></span></h2><div class="grid">
+  <div><label>Sueldo mensual equivalente ($)</label><input id="salary" type="number" min="0" step=".01" readonly><div class="muted">Se configura en el apartado “Mi sueldo”.</div></div>
+  <div><label>Meta de ahorro ($)</label><input id="goal" type="number" min="0" step=".01"></div>
+ </div><div style="margin-top:14px" class="row"><div><div class="muted">Progreso de la meta</div><strong id="goalPct">0%</strong></div><div class="muted" id="goalText"></div></div><div class="progress"><span id="goalBar"></span></div></div>
+ <div class="panel"><h2>Actividad reciente</h2><div id="recent" class="empty">Todavía no hay movimientos.</div></div>
+</section>
+<section id="salaryTab" class="tab hidden">
+ <div class="panel"><h2>💜 Configura mi sueldo</h2>
+  <p class="muted">Registra cuánto ganas y cada cuándo te pagan. El sistema calculará automáticamente tu ingreso mensual equivalente para el control financiero.</p>
+  <div class="grid">
+   <div><label>¿Cuánto recibes por pago? ($)</label><input id="salaryAmount" type="number" min="0" step=".01" placeholder="Ej. 5000"></div>
+   <div><label>Frecuencia de pago</label><select id="salaryFrequency"><option value="monthly">Mensual</option><option value="fortnightly">Quincenal (2 pagos al mes)</option><option value="weekly">Semanal</option></select></div>
+   <div id="salaryDayWrap"><label>Día habitual de pago (opcional)</label><select id="salaryDay"><option value="">Sin especificar</option><option value="1">Día 1</option><option value="5">Día 5</option><option value="10">Día 10</option><option value="15">Día 15</option><option value="20">Día 20</option><option value="25">Día 25</option><option value="30">Día 30</option></select></div>
+  </div>
+  <p><button class="primary" id="saveSalary">Guardar configuración de sueldo</button></p>
+  <div class="panel" style="background:var(--lilac2);box-shadow:none">
+   <div class="muted">Ingreso mensual estimado</div><strong id="salaryMonthlyPreview" style="font-size:27px">$0.00</strong>
+   <div class="muted" id="salaryFormula">Configura tu sueldo para ver el cálculo.</div>
+  </div>
+ </div>
+</section>
+<section id="money" class="tab hidden">
+ <div class="panel"><h2>Registrar movimiento</h2><div class="grid">
+  <div><label>Tipo</label><select id="movType"><option value="expense">Gasto</option><option value="income">Ingreso extra</option><option value="debt">Pago de deuda</option><option value="saving">Ahorro personal</option></select></div>
+  <div><label>Fecha</label><input id="movDate" type="date"></div>
+  <div><label>Descripción</label><input id="movDesc" placeholder="Ej. transporte, venta, renta"></div>
+  <div><label>Cantidad ($)</label><input id="movAmount" type="number" min=".01" step=".01" placeholder="0.00"></div>
+ </div><p><button class="primary" id="addMove">Guardar movimiento</button></p></div>
+ <div class="panel"><h2>Movimientos del año</h2><div id="moves"></div></div>
+</section>
+<section id="challenge" class="tab hidden">
+ <div class="panel"><h2>Configura tu reto</h2><div class="grid">
+  <div><label>Frecuencia</label><select id="frequency"><option value="weekly">Semanal</option><option value="fortnightly">Quincenal</option></select></div>
+  <div><label>Modalidad</label><select id="mode"><option>Suave</option><option>Medio</option><option>Desafiante</option><option>Personalizado</option></select></div>
+  <div><label>Aportación por periodo ($)</label><input id="contribution" type="number" min=".01" step=".01" value="100"></div>
+  <div id="weekdayWrap"><label>Día de la semana</label><select id="weekday"><option value="1">Lunes</option><option value="2">Martes</option><option value="3">Miércoles</option><option value="4">Jueves</option><option value="5">Viernes</option><option value="6">Sábado</option><option value="0">Domingo</option></select></div>
+ </div><p class="muted">El calendario se genera para el año seleccionado. El reto quincenal usa los días 1 y 15 de cada mes. El semanal usa el día elegido y puede incluir 53 fechas si ese día aparece 53 veces en el año.</p><button class="primary" id="saveChallenge">Crear / actualizar calendario</button></div>
+ <div class="panel"><div class="row"><div><h2 style="margin:0">Calendario de aportaciones</h2><div class="muted" id="challengeSummary"></div></div><div style="flex:0 0 auto"><span class="pill" id="challengeProgress">0 / 0</span></div></div><div class="progress"><span id="challengeBar"></span></div><div id="schedule"></div></div>
+</section>
+<section id="history" class="tab hidden">
+ <div class="panel"><h2>Historial y años archivados</h2><div id="archiveList" class="empty">No hay años archivados.</div></div>
+</section>
+<section id="settings" class="tab hidden">
+ <div class="panel"><h2>Personalización</h2><label>Color principal</label><select id="theme"><option value="lilac">Lila y rosa</option><option value="pink">Rosa y lila</option></select><p class="muted">Tus datos se guardan en este navegador en este dispositivo. Usa Exportar respaldo para conservar una copia o trasladarla a otro dispositivo.</p><button class="danger" id="resetYear">Borrar datos del año seleccionado</button></div>
+</section>
+<footer>Mi Control Financiero · Datos guardados localmente en este navegador.</footer>
+</main>
+<script>
+const $=id=>document.getElementById(id), money=n=>new Intl.NumberFormat('es-MX',{style:'currency',currency:'MXN'}).format(Number(n)||0);
+const today=new Date(), currentYear=today.getFullYear(); let db={years:{},archives:{},theme:'lilac'};
+function blank(){return {salary:0,salaryAmount:0,salaryFrequency:'monthly',salaryDay:'',goal:100000,movements:[],challenge:{frequency:'weekly',mode:'Suave',amount:100,weekday:1,entries:[]}}}
+function load(){try{const x=JSON.parse(localStorage.getItem('mcf-data'));if(x&&x.years)db=x}catch(e){}}
+function persist(){localStorage.setItem('mcf-data',JSON.stringify(db))}
+function year(){return Number($('year').value)}
+function data(y=year()){if(!db.years[y])db.years[y]=blank();return db.years[y]}
+function dateISO(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+function datesFor(y,c){let out=[];if(c.frequency==='fortnightly'){for(let m=0;m<12;m++){out.push(`${y}-${String(m+1).padStart(2,'0')}-01`,`${y}-${String(m+1).padStart(2,'0')}-15`)}}else{let d=new Date(y,0,1);while(d.getDay()!==Number(c.weekday))d.setDate(d.getDate()+1);while(d.getFullYear()===y){out.push(dateISO(d));d.setDate(d.getDate()+7)}}return out}
+function ensureSchedule(d){let c=d.challenge, dates=datesFor(year(),c), old=new Map((c.entries||[]).map(e=>[e.date,e]));c.entries=dates.map(date=>old.get(date)||{date,done:false,amount:Number(c.amount)||0});}
+function totals(d){let inc=Number(d.salary||0)+d.movements.filter(x=>x.type==='income').reduce((s,x)=>s+x.amount,0), exp=d.movements.filter(x=>x.type==='expense').reduce((s,x)=>s+x.amount,0), debt=d.movements.filter(x=>x.type==='debt').reduce((s,x)=>s+x.amount,0), personal=d.movements.filter(x=>x.type==='saving').reduce((s,x)=>s+x.amount,0), challenge=d.challenge.entries.filter(x=>x.done).reduce((s,x)=>s+Number(x.amount),0);return {inc,exp,debt,personal,challenge,available:inc-exp-debt-personal-challenge,saved:personal+challenge}}
+function render(){let y=year(),d=data(),t=totals(d);$('yearLabel').textContent=y;$('salary').value=d.salary;$('salaryAmount').value=d.salaryAmount??d.salary??0;$('salaryFrequency').value=d.salaryFrequency||'monthly';$('salaryDay').value=d.salaryDay||'';$('salaryMonthlyPreview').textContent=money(d.salary||0);$('salaryFormula').textContent=salaryFormula(d);$('goal').value=d.goal;$('incomeTotal').textContent=money(t.inc);$('expenseTotal').textContent=money(t.exp+t.debt);$('savingTotal').textContent=money(t.saved);$('available').textContent=money(t.available);$('available').style.color=t.available<0?'var(--red)':'var(--green)';let pct=d.goal>0?Math.min(100,t.saved/d.goal*100):0;$('goalPct').textContent=pct.toFixed(1)+'%';$('goalText').textContent=money(Math.max(0,d.goal-t.saved))+' para alcanzar tu meta';$('goalBar').style.width=pct+'%';
+let recent=[...d.movements.map(x=>({...x,label:x.desc})),...d.challenge.entries.filter(x=>x.done).map(x=>({type:'saving',amount:x.amount,date:x.date,label:'Reto de ahorro'}))].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,5);$('recent').innerHTML=recent.length?recent.map(x=>`<div class="item"><div><b>${esc(x.label)}</b><div class="muted">${x.date}</div></div><b>${money(x.amount)}</b></div>`).join(''):'Todavía no hay movimientos.';
+$('moves').innerHTML=d.movements.length?d.movements.slice().sort((a,b)=>b.date.localeCompare(a.date)).map((x,i)=>`<div class="item"><div><b>${esc(x.desc)}</b><div class="muted">${x.date} · ${typeName(x.type)}</div></div><b>${money(x.amount)}</b><button class="danger" data-del="${i}">Eliminar</button></div>`).join(''):'<div class="empty">Sin movimientos registrados.</div>';
+let c=d.challenge; $('frequency').value=c.frequency;$('mode').value=c.mode;$('contribution').value=c.amount;$('weekday').value=c.weekday;$('weekdayWrap').style.display=c.frequency==='weekly'?'block':'none';ensureSchedule(d);let done=c.entries.filter(x=>x.done).length;$('challengeProgress').textContent=`${done} / ${c.entries.length}`;$('challengeSummary').textContent=`${c.frequency==='weekly'?'Semanal':'Quincenal'} · ${c.mode} · ${c.entries.length} fechas en ${y}`;$('challengeBar').style.width=(done/c.entries.length*100)+'%';$('schedule').innerHTML=c.entries.map((e,i)=>`<div class="item"><div><b>${new Date(e.date+'T12:00:00').toLocaleDateString('es-MX',{weekday:'long',day:'numeric',month:'long'})}</b><div class="muted">Aportación ${i+1} · ${money(e.amount)}</div></div><label style="margin:0;display:flex;align-items:center;gap:7px"><input class="check" type="checkbox" data-entry="${i}" ${e.done?'checked':''}> ${e.done?'Completada':'Pendiente'}</label></div>`).join('');
+$('archiveList').innerHTML=Object.keys(db.archives).length?Object.keys(db.archives).sort((a,b)=>b-a).map(y=>`<div class="item"><div><b>Año ${y}</b><div class="muted">Respaldo archivado</div></div><button data-restore="${y}">Restaurar</button></div>`).join(''):'No hay años archivados.';persist()}
+function salaryFormula(d){let a=Number(d.salaryAmount??d.salary)||0;let f=d.salaryFrequency||'monthly';return f==='weekly'?`${money(a)} × 52 ÷ 12 (estimado mensual)`:f==='fortnightly'?`${money(a)} × 2 pagos al mes`:`${money(a)} al mes`}
+function typeName(t){return {expense:'Gasto',income:'Ingreso extra',debt:'Pago de deuda',saving:'Ahorro personal'}[t]||t}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function init(){load();for(let y=currentYear-1;y<=currentYear+10;y++){let o=document.createElement('option');o.value=y;o.textContent=y;$('year').append(o)}$('year').value=currentYear;if(!db.years[currentYear])db.years[currentYear]=blank();$('movDate').value=dateISO(today);$('theme').value=db.theme||'lilac';applyTheme();render()}
+function applyTheme(){if(db.theme==='pink'){document.documentElement.style.setProperty('--lilac','#d77ca8');document.documentElement.style.setProperty('--lilac2','#fbe5ef');document.documentElement.style.setProperty('--pink','#ad83d0');document.documentElement.style.setProperty('--pink2','#f0e8fa')}else{document.documentElement.style.setProperty('--lilac','#a879c7');document.documentElement.style.setProperty('--lilac2','#f0e5f8');document.documentElement.style.setProperty('--pink','#e9a5c2');document.documentElement.style.setProperty('--pink2','#fcebf2')}}
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tabs button').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('hidden',x.id!==b.dataset.tab));});
+$('year').onchange=render;
+$('salaryAmount').oninput=()=>{let a=Number($('salaryAmount').value)||0,f=$('salaryFrequency').value;let m=f==='weekly'?a*52/12:f==='fortnightly'?a*2:a;$('salaryMonthlyPreview').textContent=money(m);$('salaryFormula').textContent=f==='weekly'?`${money(a)} × 52 ÷ 12 (estimado mensual)`:f==='fortnightly'?`${money(a)} × 2 pagos al mes`:`${money(a)} al mes`};
+$('salaryFrequency').onchange=()=>$('salaryAmount').dispatchEvent(new Event('input'));
+$('saveSalary').onclick=()=>{let d=data(),a=Number($('salaryAmount').value)||0,f=$('salaryFrequency').value;d.salaryAmount=a;d.salaryFrequency=f;d.salaryDay=$('salaryDay').value;d.salary=f==='weekly'?a*52/12:f==='fortnightly'?a*2:a;render();alert('Configuración de sueldo guardada.')};
+$('salary').onchange=()=>{data().salary=Number($('salary').value)||0;data().salaryAmount=data().salary;data().salaryFrequency='monthly';render()};
+$('goal').onchange=()=>{data().goal=Number($('goal').value)||0;render()};
+$('addMove').onclick=()=>{let desc=$('movDesc').value.trim(),amount=Number($('movAmount').value),date=$('movDate').value;if(!desc||amount<=0||!date)return alert('Completa descripción, fecha y cantidad.');data().movements.push({type:$('movType').value,desc,amount,date});$('movDesc').value='';$('movAmount').value='';render()};
+$('moves').onclick=e=>{let b=e.target.closest('[data-del]');if(b){let d=data(),idx=Number(b.dataset.del),sorted=d.movements.slice().sort((a,b)=>b.date.localeCompare(a.date));let item=sorted[idx];d.movements.splice(d.movements.indexOf(item),1);render()}};
+$('frequency').onchange=()=>{$('weekdayWrap').style.display=$('frequency').value==='weekly'?'block':'none'};
+$('saveChallenge').onclick=()=>{let d=data(),c=d.challenge;c.frequency=$('frequency').value;c.mode=$('mode').value;c.amount=Number($('contribution').value)||100;c.weekday=Number($('weekday').value);ensureSchedule(d);c.entries.forEach(e=>{if(!e.done)e.amount=c.amount});render()};
+$('schedule').onchange=e=>{let el=e.target.closest('[data-entry]');if(!el)return;let entry=data().challenge.entries[Number(el.dataset.entry)];entry.done=el.checked;render()};
+$('archiveYear').onclick=()=>{let y=year();if(!confirm(`¿Archivar el año ${y}? Podrás restaurarlo después.`))return;db.archives[y]=data(y);delete db.years[y];let next=y+1;if(!db.years[next])db.years[next]=blank();$('year').value=next;render()};
+$('archiveList').onclick=e=>{let b=e.target.closest('[data-restore]');if(!b)return;let y=b.dataset.restore;if(db.years[y]&&!confirm(`Ya existen datos activos de ${y}. ¿Reemplazarlos por el archivo?`))return;db.years[y]=db.archives[y];delete db.archives[y];$('year').value=y;render()};
+$('theme').onchange=()=>{db.theme=$('theme').value;applyTheme();persist()};
+$('resetYear').onclick=()=>{if(confirm(`¿Borrar todos los datos del año ${year()}? Esta acción no se puede deshacer.`)){db.years[year()]=blank();render()}};
+$('export').onclick=()=>{persist();let blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='mi-control-financiero-respaldo.json';a.click();URL.revokeObjectURL(a.href)};
+$('import').onchange=async e=>{let f=e.target.files[0];if(!f)return;try{let x=JSON.parse(await f.text());if(!x.years||!x.archives)throw Error();if(!confirm('Importar reemplazará los datos actuales. ¿Continuar?'))return;db=x;for(let y of Object.keys(db.years)){let opt=[...$('year').options].find(o=>o.value===y);if(!opt){opt=document.createElement('option');opt.value=y;opt.textContent=y;$('year').append(opt)}}$('year').value=Object.keys(db.years)[0]||currentYear;applyTheme();render();alert('Respaldo importado correctamente.')}catch(err){alert('No se pudo leer el respaldo. Selecciona un archivo JSON exportado desde esta aplicación.')}e.target.value=''};
+init();
+</script></body></html>
